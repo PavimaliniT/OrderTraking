@@ -105,7 +105,7 @@ const OrderDetails = () => {
                 <Calendar className="h-5 w-5 text-primary mt-1" />
                 <div>
                   <p className="text-sm text-muted-foreground">Order Date</p>
-                  <p className="font-medium">{format(order.orderDate, 'PPP')}</p>
+                  <p className="font-medium">{format(order.orderDate, 'EEE, PPP')}</p>
                 </div>
               </div>
 
@@ -113,7 +113,7 @@ const OrderDetails = () => {
                 <Calendar className="h-5 w-5 text-primary mt-1" />
                 <div>
                   <p className="text-sm text-muted-foreground">Expected Delivery</p>
-                  <p className="font-medium">{format(order.expectedDeliveryDate, 'PPP')}</p>
+                  <p className="font-medium">{format(order.expectedDeliveryDate, 'EEE, PPP')}</p>
                   <Badge variant={order.deliveryPriority === 'Urgent' ? 'destructive' : 'secondary'} className="mt-1">
                     {order.deliveryPriority}
                   </Badge>

@@ -47,7 +47,7 @@ const DeliveryList = () => {
         <div className="flex items-center text-sm">
           <Calendar className="h-4 w-4 mr-2 text-primary" />
           <span className={isOverdue ? 'text-destructive font-medium' : ''}>
-            {format(order.expectedDeliveryDate, 'PPP')}
+            {format(order.expectedDeliveryDate, 'EEE, PPP')}
             {isOverdue && ' (Overdue)'}
           </span>
         </div>

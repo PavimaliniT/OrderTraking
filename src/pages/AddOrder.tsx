@@ -244,7 +244,7 @@ const AddOrder = () => {
                               )}
                             >
                               {field.value ? (
-                                format(field.value, "PPP")
+                                format(field.value, "EEE, PPP")
                               ) : (
                                 <span>Pick a date</span>
                               )}
