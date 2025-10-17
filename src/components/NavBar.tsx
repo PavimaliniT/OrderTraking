@@ -1,4 +1,5 @@
-import { Package, Menu } from 'lucide-react';
+import { useState } from 'react';
+import { Package, Menu, MapPin } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,8 @@ import {
   SheetContent,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { useVillage } from '@/contexts/VillageContext';
+import { VillageSwitcher } from '@/components/VillageSwitcher';
 
 const navItems = [
   { path: '/', label: 'Dashboard' },
@@ -16,6 +19,8 @@ const navItems = [
 
 export const NavBar = () => {
   const location = useLocation();
+  const { activeVillage } = useVillage();
+  const [showVillageSwitcher, setShowVillageSwitcher] = useState(false);
 
   const NavLinks = () => (
     <>
@@ -37,34 +42,55 @@ export const NavBar = () => {
   );
 
   return (
-    <nav className="border-b bg-card">
-      <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center space-x-2">
-            <Package className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold">Smart Order Tracker</span>
-          </Link>
+    <>
+      <nav className="border-b bg-card">
+        <div className="container mx-auto px-4">
+          <div className="flex h-16 items-center justify-between">
+            <Link to="/" className="flex items-center space-x-2">
+              <Package className="h-6 w-6 text-primary" />
+              <span className="text-xl font-bold">Smart Order Tracker</span>
+            </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-6">
-            <NavLinks />
-          </div>
-
-          {/* Mobile Navigation */}
-          <Sheet>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex md:items-center md:space-x-6">
+              <NavLinks />
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+                onClick={() => setShowVillageSwitcher(true)}
+              >
+                <MapPin className="h-4 w-4" />
+                {activeVillage ? activeVillage : 'Set Village'}
               </Button>
-            </SheetTrigger>
-            <SheetContent side="right">
-              <div className="flex flex-col space-y-4 mt-8">
-                <NavLinks />
-              </div>
-            </SheetContent>
-          </Sheet>
+            </div>
+
+            {/* Mobile Navigation */}
+            <Sheet>
+              <SheetTrigger asChild className="md:hidden">
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <div className="flex flex-col space-y-4 mt-8">
+                  <Button
+                    variant="outline"
+                    className="justify-start gap-2"
+                    onClick={() => setShowVillageSwitcher(true)}
+                  >
+                    <MapPin className="h-4 w-4" />
+                    {activeVillage ? activeVillage : 'Set Village'}
+                  </Button>
+                  <NavLinks />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      <VillageSwitcher open={showVillageSwitcher} onOpenChange={setShowVillageSwitcher} />
+    </>
   );
 };

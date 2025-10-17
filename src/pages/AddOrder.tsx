@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,6 +6,7 @@ import * as z from 'zod';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { useOrders } from '@/contexts/OrderContext';
+import { useVillage } from '@/contexts/VillageContext';
 import { NavBar } from '@/components/NavBar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,12 +50,13 @@ const formSchema = z.object({
 const AddOrder = () => {
   const navigate = useNavigate();
   const { addOrder } = useOrders();
+  const { activeVillage } = useVillage();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      villageName: '',
+      villageName: activeVillage || '',
       customerName: '',
       productName: '',
       quantity: 1,
@@ -65,6 +67,13 @@ const AddOrder = () => {
       deliveryNotes: '',
     },
   });
+
+  // Update village field when active village changes
+  useEffect(() => {
+    if (activeVillage) {
+      form.setValue('villageName', activeVillage);
+    }
+  }, [activeVillage, form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);

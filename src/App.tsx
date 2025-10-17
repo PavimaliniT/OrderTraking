@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { OrderProvider } from "./contexts/OrderContext";
+import { VillageProvider } from "./contexts/VillageContext";
 import Dashboard from "./pages/Dashboard";
 import AddOrder from "./pages/AddOrder";
 import OrderList from "./pages/OrderList";
@@ -16,20 +17,22 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <OrderProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/add-order" element={<AddOrder />} />
-            <Route path="/orders" element={<OrderList />} />
-            <Route path="/orders/:orderId" element={<OrderDetails />} />
-            <Route path="/deliveries" element={<DeliveryList />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </OrderProvider>
+      <VillageProvider>
+        <OrderProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/add-order" element={<AddOrder />} />
+              <Route path="/orders" element={<OrderList />} />
+              <Route path="/orders/:orderId" element={<OrderDetails />} />
+              <Route path="/deliveries" element={<DeliveryList />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </OrderProvider>
+      </VillageProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
