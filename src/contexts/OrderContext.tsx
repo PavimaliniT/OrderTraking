@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order } from '@/types/order';
 import { useFirebase } from './FirebaseContext';
+import { useAuth } from './AuthContext';
 import { collection, getDocs, setDoc, doc, deleteDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 
@@ -33,15 +34,23 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   })();
 
+  const { user, loading: authLoading } = (() => {
+    try {
+      return useAuth();
+    } catch {
+      return { user: null, loading: false } as any;
+    }
+  })();
+
   useEffect(() => {
-    if (firebaseCtx) {
+    if (firebaseCtx && user) {
       console.debug('OrderContext: Firestore available for syncing', {
         projectId: (firebaseCtx.app as any)?.options?.projectId,
       });
     } else {
       console.debug('OrderContext: Firestore not available, operating in local mode');
     }
-  }, [firebaseCtx]);
+  }, [firebaseCtx, user]);
 
   // Sync local changes to localStorage
   useEffect(() => {
@@ -51,7 +60,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // When firebase becomes available, attempt to load orders from Firestore.
   // If Firestore is empty and localStorage has orders, migrate them.
   useEffect(() => {
-    if (!firebaseCtx) return;
+    if (!firebaseCtx || authLoading || !user) return;
 
     let mounted = true;
     (async () => {
@@ -97,13 +106,13 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firebaseCtx]);
+  }, [firebaseCtx, authLoading, user]);
 
   const addOrder = (order: Order) => {
     setOrders(prev => [...prev, order]);
     // attempt to persist immediately to Firestore
     (async () => {
-      if (!firebaseCtx) return;
+      if (!firebaseCtx || !user) return;
       try {
         await setDoc(doc(firebaseCtx.db, 'orders', order.orderId), order);
       } catch (err) {
@@ -116,7 +125,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setOrders(prev => prev.map(order => 
       order.orderId === orderId ? { ...order, ...updates } : order
     ));
-    if (!firebaseCtx) return;
+    if (!firebaseCtx || !user) return;
     (async () => {
       try {
         const existing = (orders.find(o => o.orderId === orderId) || {}) as any;
@@ -130,7 +139,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const deleteOrder = (orderId: string) => {
     setOrders(prev => prev.filter(order => order.orderId !== orderId));
-    if (!firebaseCtx) return;
+    if (!firebaseCtx || !user) return;
     (async () => {
       try {
         await deleteDoc(doc(firebaseCtx.db, 'orders', orderId));

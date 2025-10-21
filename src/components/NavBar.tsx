@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/sheet';
 import { useVillage } from '@/contexts/VillageContext';
 import { VillageSwitcher } from '@/components/VillageSwitcher';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
   { path: '/', label: 'Dashboard' },
@@ -21,6 +22,7 @@ export const NavBar = () => {
   const location = useLocation();
   const { activeVillage } = useVillage();
   const [showVillageSwitcher, setShowVillageSwitcher] = useState(false);
+  const { user, loading, signInWithGoogle, signOut } = useAuth();
 
   const NavLinks = () => (
     <>
@@ -63,6 +65,18 @@ export const NavBar = () => {
                 <MapPin className="h-4 w-4" />
                 {activeVillage ? activeVillage : 'Set Village'}
               </Button>
+              {!loading && (
+                user ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground hidden lg:inline">
+                      {user.isAnonymous ? 'Guest' : (user.displayName || user.email)}
+                    </span>
+                    <Button size="sm" variant="ghost" onClick={() => signOut()}>Sign out</Button>
+                  </div>
+                ) : (
+                  <Button size="sm" onClick={() => signInWithGoogle()}>Sign in</Button>
+                )
+              )}
             </div>
 
             {/* Mobile Navigation */}
@@ -83,6 +97,18 @@ export const NavBar = () => {
                     {activeVillage ? activeVillage : 'Set Village'}
                   </Button>
                   <NavLinks />
+                  {!loading && (
+                    user ? (
+                      <>
+                        <div className="text-sm text-muted-foreground">
+                          Signed in as {user.isAnonymous ? 'Guest' : (user.displayName || user.email)}
+                        </div>
+                        <Button variant="ghost" onClick={() => signOut()}>Sign out</Button>
+                      </>
+                    ) : (
+                      <Button onClick={() => signInWithGoogle()}>Sign in</Button>
+                    )
+                  )}
                 </div>
               </SheetContent>
             </Sheet>

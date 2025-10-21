@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useFirebase } from './FirebaseContext';
+import { useAuth } from './AuthContext';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 interface VillageContextType {
@@ -23,6 +24,14 @@ export const VillageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return localStorage.getItem('activeVillage') || '';
   });
 
+  const { user, loading: authLoading } = (() => {
+    try {
+      return useAuth();
+    } catch {
+      return { user: null, loading: false } as any;
+    }
+  })();
+
   useEffect(() => {
     if (firebaseCtx) {
       console.debug('VillageContext: Firestore available', { projectId: (firebaseCtx.app as any)?.options?.projectId });
@@ -33,7 +42,7 @@ export const VillageProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // When firebase is available, load stored activeVillage from Firestore (meta/activeVillage)
   useEffect(() => {
-    if (!firebaseCtx) return;
+    if (!firebaseCtx || authLoading || !user) return;
     (async () => {
       try {
         const docRef = doc(firebaseCtx.db, 'meta', 'activeVillage');
@@ -50,7 +59,7 @@ export const VillageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firebaseCtx]);
+  }, [firebaseCtx, authLoading, user]);
 
   useEffect(() => {
     if (activeVillage) {
@@ -59,7 +68,7 @@ export const VillageProvider: React.FC<{ children: React.ReactNode }> = ({ child
       localStorage.removeItem('activeVillage');
     }
 
-    if (!firebaseCtx) return;
+    if (!firebaseCtx || !user) return;
     (async () => {
       try {
         await setDoc(doc(firebaseCtx.db, 'meta', 'activeVillage'), { value: activeVillage });
@@ -67,7 +76,7 @@ export const VillageProvider: React.FC<{ children: React.ReactNode }> = ({ child
         console.error('Failed to persist activeVillage to Firestore', err);
       }
     })();
-  }, [activeVillage, firebaseCtx]);
+  }, [activeVillage, firebaseCtx, user]);
 
   const setActiveVillage = (village: string) => {
     setActiveVillageState(village);

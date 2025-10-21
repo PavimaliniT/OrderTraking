@@ -71,3 +71,24 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Local development with Firebase
+
+1. Create a Firebase project and add a Web app. Copy the config into `.env.local` using the keys `VITE_FIREBASE_*` (apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId, measurementId).
+2. In Firebase Console, enable Authentication providers:
+	 - Google (recommended)
+	 - Anonymous (optional; used as a fallback during development)
+3. Set Firestore Security Rules (development):
+
+```
+rules_version = '2';
+service cloud.firestore {
+	match /databases/{database}/documents {
+		match /{document=**} {
+			allow read, write: if request.auth != null;
+		}
+	}
+}
+```
+
+Tighten these rules for production as needed (e.g., restrict to specific user UIDs or roles).
