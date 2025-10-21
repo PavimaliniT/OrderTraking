@@ -15,4 +15,17 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Helpful debug info (don't log apiKey in full in production logs)
+try {
+  // eslint-disable-next-line no-console
+  console.debug('Firebase initialized', {
+    projectId: firebaseConfig.projectId,
+    authDomain: firebaseConfig.authDomain,
+    appId: firebaseConfig.appId,
+    hasApiKey: !!firebaseConfig.apiKey,
+  });
+} catch (e) {
+  // ignore
+}
+
 export { app, auth, db };

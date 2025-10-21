@@ -23,6 +23,14 @@ export const VillageProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return localStorage.getItem('activeVillage') || '';
   });
 
+  useEffect(() => {
+    if (firebaseCtx) {
+      console.debug('VillageContext: Firestore available', { projectId: (firebaseCtx.app as any)?.options?.projectId });
+    } else {
+      console.debug('VillageContext: Firestore not available, local-only');
+    }
+  }, [firebaseCtx]);
+
   // When firebase is available, load stored activeVillage from Firestore (meta/activeVillage)
   useEffect(() => {
     if (!firebaseCtx) return;

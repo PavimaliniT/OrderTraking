@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Order } from '@/types/order';
 import { useFirebase } from './FirebaseContext';
-import { collection, getDocs, addDoc, setDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, setDoc, doc, deleteDoc } from 'firebase/firestore';
+import { toast } from 'sonner';
 
 interface OrderContextType {
   orders: Order[];
@@ -32,24 +33,71 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   })();
 
-  // Sync local changes to localStorage and to Firestore when available
+  useEffect(() => {
+    if (firebaseCtx) {
+      console.debug('OrderContext: Firestore available for syncing', {
+        projectId: (firebaseCtx.app as any)?.options?.projectId,
+      });
+    } else {
+      console.debug('OrderContext: Firestore not available, operating in local mode');
+    }
+  }, [firebaseCtx]);
+
+  // Sync local changes to localStorage
   useEffect(() => {
     localStorage.setItem('orders', JSON.stringify(orders));
+  }, [orders]);
 
+  // When firebase becomes available, attempt to load orders from Firestore.
+  // If Firestore is empty and localStorage has orders, migrate them.
+  useEffect(() => {
     if (!firebaseCtx) return;
-    const sync = async () => {
+
+    let mounted = true;
+    (async () => {
       try {
-        // Write each order as a document under collection 'orders' with id = orderId
-        for (const o of orders) {
-          await setDoc(doc(firebaseCtx.db, 'orders', o.orderId), o);
+        console.debug('OrderContext: fetching orders from Firestore');
+        const qSnap = await getDocs(collection(firebaseCtx.db, 'orders'));
+        if (!mounted) return;
+
+        console.debug('OrderContext: fetched', qSnap.size, 'docs from Firestore');
+        if (!qSnap.empty) {
+          const remote = qSnap.docs.map(d => d.data() as Order);
+          setOrders(remote);
+          toast.success('Loaded orders from Firestore');
+          return;
         }
-      } catch (err) {
-        // ignore sync errors; localStorage remains the source of truth offline
-        console.error('Failed to sync orders to Firestore', err);
+
+        // Firestore empty: try to migrate localStorage orders
+        const stored = localStorage.getItem('orders');
+        if (stored) {
+          const local = JSON.parse(stored);
+          for (const o of local) {
+            try {
+              console.debug('OrderContext: migrating order to Firestore', o.orderId);
+              await setDoc(doc(firebaseCtx.db, 'orders', o.orderId), o);
+            } catch (err) {
+              console.error('Migration write failed for order', o.orderId, err);
+            }
+          }
+          // After migration, reload from Firestore
+          const after = await getDocs(collection(firebaseCtx.db, 'orders'));
+          if (!mounted) return;
+          const remoteAfter = after.docs.map(d => d.data() as Order);
+          setOrders(remoteAfter);
+          toast.success('Migrated local orders to Firestore');
+        }
+      } catch (err: any) {
+        console.error('Failed to load orders from Firestore', err);
+        toast.error('Failed to load orders from Firestore — check console');
       }
+    })();
+
+    return () => {
+      mounted = false;
     };
-    sync();
-  }, [orders, firebaseCtx]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firebaseCtx]);
 
   const addOrder = (order: Order) => {
     setOrders(prev => [...prev, order]);

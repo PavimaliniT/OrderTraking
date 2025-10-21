@@ -23,3 +23,8 @@ export const useFirebase = () => {
   if (!ctx) throw new Error('useFirebase must be used within FirebaseProvider');
   return ctx;
 };
+
+// Non-throwing variant — returns null if provider missing. Useful for diagnostic checks.
+export const useFirebaseOptional = () => {
+  return useContext(FirebaseContext);
+};
